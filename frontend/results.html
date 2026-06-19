@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Placed Students — PlaceTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div><div class="logo-title">PlaceTrack</div><div class="logo-sub">SPIT · 2024</div></div>
+    </div>
+    <nav class="nav">
+      <a href="index.html"        class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+      <a href="students.html"     class="nav-item"><span class="nav-icon">◉</span> Students</a>
+      <a href="companies.html"    class="nav-item"><span class="nav-icon">◈</span> Companies</a>
+      <a href="jobs.html"         class="nav-item"><span class="nav-icon">◆</span> Job Openings</a>
+      <a href="applications.html" class="nav-item"><span class="nav-icon">◇</span> Applications</a>
+      <a href="results.html"      class="nav-item active"><span class="nav-icon">★</span> Placed Students</a>
+    </nav>
+    <div class="sidebar-footer">EXTC · Batch A</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Placed Students</h1>
+        <p class="page-sub">Final placement outcomes</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">+ Add Result</button>
+    </header>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th><th>Branch</th><th>Company</th>
+            <th>Job Role</th><th>Package (LPA)</th><th>Offer Date</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTable">
+          <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>Add Placement Result</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Student ID</label>
+          <input type="text" id="f_student_id" placeholder="Student ID"/>
+        </div>
+        <div class="form-group">
+          <label>Job ID</label>
+          <input type="number" id="f_job_id" placeholder="Job ID"/>
+        </div>
+        <div class="form-group">
+          <label>Company ID</label>
+          <input type="number" id="f_company_id" placeholder="Company ID"/>
+        </div>
+        <div class="form-group">
+          <label>Offer Date</label>
+          <input type="date" id="f_offer_date"/>
+        </div>
+        <div class="form-group">
+          <label>Joining Date</label>
+          <input type="date" id="f_joining_date"/>
+        </div>
+        <div class="form-group full">
+          <label>Package Offered (LPA)</label>
+          <input type="number" step="0.01" id="f_package" placeholder="7.50"/>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addResult()">Save Result</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadResults() {
+      const results = await api.get('/results');
+      const tbody = document.getElementById('resultsTable');
+      if (!results.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">★</div>No placements recorded yet.</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = results.map(r => `
+        <tr>
+          <td><strong>${r.full_name}</strong></td>
+          <td><span class="badge badge-blue">${r.branch}</span></td>
+          <td>${r.company_name}</td>
+          <td>${r.job_title}</td>
+          <td><span class="badge badge-green">${r.package_offered} LPA</span></td>
+          <td>${r.offer_date ? r.offer_date.split('T')[0] : '—'}</td>
+          <td><span class="badge badge-green">${r.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    async function addResult() {
+      const data = {
+        student_id:      document.getElementById('f_student_id').value,
+        job_id:          document.getElementById('f_job_id').value,
+        company_id:      document.getElementById('f_company_id').value,
+        offer_date:      document.getElementById('f_offer_date').value,
+        joining_date:    document.getElementById('f_joining_date').value,
+        package_offered: document.getElementById('f_package').value,
+      };
+      const res = await api.post('/results', data);
+      alert(res.message || res.error);
+      if (res.message) { closeModal(); loadResults(); }
+    }
+
+    function openModal()  { document.getElementById('modal').classList.add('open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+    loadResults();
+  </script>
+</body>
+</html>

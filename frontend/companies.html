@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Companies — PlaceTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div><div class="logo-title">PlaceTrack</div><div class="logo-sub">SPIT · 2024</div></div>
+    </div>
+    <nav class="nav">
+      <a href="index.html"        class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+      <a href="students.html"     class="nav-item"><span class="nav-icon">◉</span> Students</a>
+      <a href="companies.html"    class="nav-item active"><span class="nav-icon">◈</span> Companies</a>
+      <a href="jobs.html"         class="nav-item"><span class="nav-icon">◆</span> Job Openings</a>
+      <a href="applications.html" class="nav-item"><span class="nav-icon">◇</span> Applications</a>
+      <a href="results.html"      class="nav-item"><span class="nav-icon">★</span> Placed Students</a>
+    </nav>
+    <div class="sidebar-footer">EXTC · Batch A</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Companies</h1>
+        <p class="page-sub">Manage recruiting companies</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">+ Add Company</button>
+    </header>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Company</th><th>Industry</th>
+            <th>HR Name</th><th>HR Email</th><th>HR Phone</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="companyTable">
+          <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>Add Company</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Company Name</label>
+          <input type="text" id="f_company_name" placeholder="Infosys Ltd."/>
+        </div>
+        <div class="form-group">
+          <label>Industry</label>
+          <input type="text" id="f_industry" placeholder="IT Services"/>
+        </div>
+        <div class="form-group">
+          <label>Website</label>
+          <input type="text" id="f_website" placeholder="https://infosys.com"/>
+        </div>
+        <div class="form-group">
+          <label>HR Contact Name</label>
+          <input type="text" id="f_hr_name" placeholder="Rahul Sharma"/>
+        </div>
+        <div class="form-group">
+          <label>HR Email</label>
+          <input type="email" id="f_hr_email" placeholder="hr@company.com"/>
+        </div>
+        <div class="form-group">
+          <label>HR Phone</label>
+          <input type="text" id="f_hr_phone" placeholder="9876543210"/>
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="f_description" placeholder="About the company..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addCompany()">Add Company</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadCompanies() {
+      const companies = await api.get('/companies');
+      const tbody = document.getElementById('companyTable');
+      if (!companies.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◈</div>No companies yet.</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = companies.map(c => `
+        <tr>
+          <td>${c.company_id}</td>
+          <td><strong>${c.company_name}</strong></td>
+          <td><span class="badge badge-blue">${c.industry || '—'}</span></td>
+          <td>${c.hr_contact_name || '—'}</td>
+          <td>${c.hr_email || '—'}</td>
+          <td>${c.hr_phone || '—'}</td>
+          <td><button class="btn btn-danger" onclick="deleteCompany(${c.company_id})">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function addCompany() {
+      const data = {
+        company_name:    document.getElementById('f_company_name').value,
+        industry:        document.getElementById('f_industry').value,
+        website:         document.getElementById('f_website').value,
+        hr_contact_name: document.getElementById('f_hr_name').value,
+        hr_email:        document.getElementById('f_hr_email').value,
+        hr_phone:        document.getElementById('f_hr_phone').value,
+        description:     document.getElementById('f_description').value,
+      };
+      const res = await api.post('/companies', data);
+      alert(res.message || res.error);
+      if (res.message) { closeModal(); loadCompanies(); }
+    }
+
+    async function deleteCompany(id) {
+      if (!confirm('Delete this company?')) return;
+      const res = await api.delete('/companies/' + id);
+      alert(res.message || res.error);
+      loadCompanies();
+    }
+
+    function openModal()  { document.getElementById('modal').classList.add('open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+    loadCompanies();
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PlaceTrack — SPIT Placement System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div class="logo-title">PlaceTrack</div>
+        <div class="logo-sub">SPIT · 2024</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html"        class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">▣</span> Dashboard
+      </a>
+      <a href="students.html"     class="nav-item" data-page="students">
+        <span class="nav-icon">◉</span> Students
+      </a>
+      <a href="companies.html"    class="nav-item" data-page="companies">
+        <span class="nav-icon">◈</span> Companies
+      </a>
+      <a href="jobs.html"         class="nav-item" data-page="jobs">
+        <span class="nav-icon">◆</span> Job Openings
+      </a>
+      <a href="applications.html" class="nav-item" data-page="applications">
+        <span class="nav-icon">◇</span> Applications
+      </a>
+      <a href="results.html"      class="nav-item" data-page="results">
+        <span class="nav-icon">★</span> Placed Students
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">EXTC · Batch A</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Real-time placement overview</p>
+      </div>
+      <div class="topbar-badge">Academic Year 2024–25</div>
+    </header>
+
+    <!-- STAT CARDS -->
+    <section class="stats-grid">
+      <div class="stat-card" style="--accent:#6EE7B7">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" id="totalStudents">—</div>
+        <div class="stat-icon">◉</div>
+      </div>
+      <div class="stat-card" style="--accent:#93C5FD">
+        <div class="stat-label">Companies Registered</div>
+        <div class="stat-value" id="totalCompanies">—</div>
+        <div class="stat-icon">◈</div>
+      </div>
+      <div class="stat-card" style="--accent:#FCD34D">
+        <div class="stat-label">Open Job Drives</div>
+        <div class="stat-value" id="totalJobs">—</div>
+        <div class="stat-icon">◆</div>
+      </div>
+      <div class="stat-card" style="--accent:#F9A8D4">
+        <div class="stat-label">Students Placed</div>
+        <div class="stat-value" id="totalPlaced">—</div>
+        <div class="stat-icon">★</div>
+      </div>
+    </section>
+
+    <!-- SECONDARY ROW -->
+    <section class="secondary-row">
+      <div class="info-card">
+        <h2 class="card-title">Avg. Package Offered</h2>
+        <div class="big-number"><span id="avgPackage">—</span> <span class="unit">LPA</span></div>
+        <p class="card-note">Across all placed students</p>
+      </div>
+
+      <div class="info-card branch-card">
+        <h2 class="card-title">Placements by Branch</h2>
+        <div id="branchStats" class="branch-list">Loading...</div>
+      </div>
+
+      <div class="info-card quick-links">
+        <h2 class="card-title">Quick Actions</h2>
+        <a href="students.html"     class="quick-btn">+ Add Student</a>
+        <a href="companies.html"    class="quick-btn">+ Add Company</a>
+        <a href="jobs.html"         class="quick-btn">+ Post Job Drive</a>
+        <a href="applications.html" class="quick-btn">View Applications</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadStats() {
+      const s = await api.get('/stats');
+      document.getElementById('totalStudents').textContent  = s.totalStudents  ?? 0;
+      document.getElementById('totalCompanies').textContent = s.totalCompanies ?? 0;
+      document.getElementById('totalJobs').textContent      = s.totalJobs      ?? 0;
+      document.getElementById('totalPlaced').textContent    = s.totalPlaced    ?? 0;
+      document.getElementById('avgPackage').textContent     = s.avgPackage     ?? '0.00';
+
+      const branchEl = document.getElementById('branchStats');
+      if (s.branchStats && s.branchStats.length > 0) {
+        branchEl.innerHTML = s.branchStats.map(b =>
+          `<div class="branch-row">
+             <span class="branch-name">${b.branch}</span>
+             <span class="branch-count">${b.placed} placed</span>
+           </div>`
+        ).join('');
+      } else {
+        branchEl.innerHTML = '<p style="color:#888">No placement data yet</p>';
+      }
+    }
+    loadStats();
+  </script>
+</body>
+</html>

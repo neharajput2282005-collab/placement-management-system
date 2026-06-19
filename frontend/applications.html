@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Applications — PlaceTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div><div class="logo-title">PlaceTrack</div><div class="logo-sub">SPIT · 2024</div></div>
+    </div>
+    <nav class="nav">
+      <a href="index.html"        class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+      <a href="students.html"     class="nav-item"><span class="nav-icon">◉</span> Students</a>
+      <a href="companies.html"    class="nav-item"><span class="nav-icon">◈</span> Companies</a>
+      <a href="jobs.html"         class="nav-item"><span class="nav-icon">◆</span> Job Openings</a>
+      <a href="applications.html" class="nav-item active"><span class="nav-icon">◇</span> Applications</a>
+      <a href="results.html"      class="nav-item"><span class="nav-icon">★</span> Placed Students</a>
+    </nav>
+    <div class="sidebar-footer">EXTC · Batch A</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Applications</h1>
+        <p class="page-sub">Track student applications & status</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">+ New Application</button>
+    </header>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th><th>Branch</th><th>CGPA</th>
+            <th>Company</th><th>Job Role</th><th>Applied On</th>
+            <th>Status</th><th>Update</th>
+          </tr>
+        </thead>
+        <tbody id="appTable">
+          <tr><td colspan="8" class="empty-state">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>Submit Application</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Student ID</label>
+          <input type="text" id="f_student_id" placeholder="Enter student ID"/>
+        </div>
+        <div class="form-group full">
+          <label>Job ID</label>
+          <input type="number" id="f_job_id" placeholder="Enter job ID from Job Openings page"/>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addApplication()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const statusColors = {
+      'Applied':     'badge-blue',
+      'Shortlisted': 'badge-yellow',
+      'Selected':    'badge-green',
+      'Rejected':    'badge-red',
+    };
+
+    async function loadApplications() {
+      const apps = await api.get('/applications');
+      const tbody = document.getElementById('appTable');
+      if (!apps.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◇</div>No applications yet.</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = apps.map(a => `
+        <tr>
+          <td><strong>${a.full_name}</strong></td>
+          <td><span class="badge badge-blue">${a.branch}</span></td>
+          <td>${a.cgpa}</td>
+          <td>${a.company_name}</td>
+          <td>${a.job_title}</td>
+          <td>${a.applied_on ? a.applied_on.split('T')[0] : '—'}</td>
+          <td><span class="badge ${statusColors[a.status] || 'badge-blue'}">${a.status}</span></td>
+          <td>
+            <select onchange="updateStatus(${a.application_id}, this.value)" style="background:#1E2230;border:1px solid #1E2230;color:#E8EAF0;padding:6px 10px;border-radius:8px;font-size:12px;">
+              <option ${a.status==='Applied'     ? 'selected':''}>Applied</option>
+              <option ${a.status==='Shortlisted' ? 'selected':''}>Shortlisted</option>
+              <option ${a.status==='Selected'    ? 'selected':''}>Selected</option>
+              <option ${a.status==='Rejected'    ? 'selected':''}>Rejected</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addApplication() {
+      const data = {
+        student_id: document.getElementById('f_student_id').value,
+        job_id:     document.getElementById('f_job_id').value,
+      };
+      const res = await api.post('/applications', data);
+      alert(res.message || res.error);
+      if (res.message) { closeModal(); loadApplications(); }
+    }
+
+    async function updateStatus(id, status) {
+      const res = await api.put('/applications/' + id, { status, remarks: '' });
+      if (res.message) loadApplications();
+    }
+
+    function openModal()  { document.getElementById('modal').classList.add('open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+    loadApplications();
+  </script>
+</body>
+</html>
