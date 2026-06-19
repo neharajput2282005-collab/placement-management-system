@@ -1,5 +1,4 @@
 # 🎓 PlaceTrack — College Placement Management System
-### SPIT · Sanchita Patil · UID 2024200087 · EXTC Batch A
 
 ---
 
